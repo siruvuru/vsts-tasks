@@ -122,25 +122,15 @@ export class StorageAccounts {
         return deferred.promise;
     }
 
-    public async _getStorageAccountDetails(storageAccountName: string, credentials: msRestAzure.ApplicationTokenCredentials, subscriptionId: string): Promise<StorageAccountInfo> {
-        tl.debug("Getting storage account details for " + storageAccountName);
-        let storageAccounts: Model.StorageAccount[] = await this.list(null);
+    public async get(storageAccountName: string): Promise<Model.StorageAccount> {
+        let storageAccounts = await this.list(null);
         let index = storageAccounts.findIndex(account => account.name.toLowerCase() === storageAccountName.toLowerCase());
+
         if (index < 0) {
-            throw new Error(tl.loc("StorageAccountDoesNotExist", storageAccountName));
+          throw new Error(tl.loc("StorageAccountDoesNotExist", storageAccountName));
         }
 
-        let storageAccountResourceGroupName = StorageAccounts.getResourceGroupNameFromUri(storageAccounts[index].id);
-
-        tl.debug("Listing storage access keys...");
-        let accessKeys = await this.listKeys(storageAccountResourceGroupName, storageAccountName, null);
-
-        return <StorageAccountInfo>{
-            name: storageAccountName,
-            primaryBlobUrl: storageAccounts[index].properties.primaryEndpoints.blob,
-            resourceGroupName: storageAccountResourceGroupName,
-            primaryAccessKey: accessKeys[0]
-        }
+        return storageAccounts[index];
     }
 
     public static getResourceGroupNameFromUri(resourceUri: string): string {
@@ -154,11 +144,4 @@ export class StorageAccounts {
     private static isNonEmptyInternal(str: string): boolean {
         return (!!str && !!str.trim());
     }
-}
-
-export interface StorageAccountInfo {
-    name: string;
-    resourceGroupName: string;
-    primaryBlobUrl: string;
-    primaryAccessKey: string;
 }
